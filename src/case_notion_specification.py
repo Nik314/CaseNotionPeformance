@@ -1,44 +1,48 @@
 import math
+import networkx
 
 
-def generate_cases(ocel, starting_type, specification, o2o, e2o, lookup_dict_types, lookup_dict_activities):
+def get_log_graph(ocel):
 
-    starting_objects = set(ocel.objects[ocel.objects["ocel:type"] == starting_type]["ocel:oid"].unique())
-    final_case_list = []
-    total = len(starting_objects)
-    while starting_objects:
+    lookup = ocel.objects.set_index("ocel:oid")["ocel:type"].to_dict()
+    ocel.o2o["ocel:oid"] = ocel.o2o["ocel:oid"].apply(lambda entry: (lookup[entry], entry))
+    ocel.o2o["ocel:oid_2"] = ocel.o2o["ocel:oid_2"].apply(lambda entry: (lookup[entry], entry))
 
-        case_events = set()
-        case_objects = {starting_objects.pop()}
-
-        while True:
-
-            #print("Remaining Objects To Check " + str(len(starting_objects) * 100 / total) + "%")
-            new_objects = set(o2o[o2o["ocel:oid"].isin(case_objects) & o2o["type"].isin(specification)]["ocel:oid_2"])
-            new_objects = new_objects | set(e2o[e2o["ocel:eid"].isin(case_events) & e2o["typee2o"].isin(specification)]["ocel:oid"])
-            new_events = set(e2o[e2o["ocel:oid"].isin(case_objects) & e2o["typeo2e"].isin(specification)]["ocel:eid"])
-            new_objects = {o for o in new_objects if o not in case_objects}
-            new_events = {e for e in new_events if e not in case_events}
-            starting_objects = starting_objects - case_objects
-
-            if not new_events and not new_objects:
-                break
-            else:
-                case_events = case_events | new_events
-                case_objects = case_objects | new_objects
-
-        final_case_list.append((case_events,case_objects))
-
-    return final_case_list
+    unique_relations = set(zip(ocel.o2o["ocel:oid"],ocel.o2o["ocel:oid_2"]))
+    unique_relations |= set(zip(ocel.o2o["ocel:oid_2"],ocel.o2o["ocel:oid"]))
+    unique_relations |= set(zip(zip(ocel.relations["ocel:activity"].to_list(), ocel.relations["ocel:eid"].to_list()),
+            zip(ocel.relations["ocel:type"].to_list(), ocel.relations["ocel:oid"].to_list())))
+    unique_relations |= set(zip(zip(ocel.relations["ocel:type"].to_list(), ocel.relations["ocel:oid"].to_list()),
+                               zip(ocel.relations["ocel:activity"].to_list(), ocel.relations["ocel:eid"].to_list())))
+    return networkx.from_edgelist(unique_relations)
 
 
 
-def check_variance(ocel, starting_type, specification, performance_indicator, o2o, e2o,
-                   lookup_dict_types, lookup_dict_activities,additional):
-    case_list = generate_cases(ocel,starting_type,specification, o2o, e2o, lookup_dict_types, lookup_dict_activities)
-    print("Number Of Cases", len(case_list))
+def generate_cases(log_graph,starting_types,relations,activities,types):
+    local_graph = networkx.from_edgelist([edge for edge in log_graph.edges if (edge[0][0],edge[1][0]) in relations])
+    cases, start_nodes = [], [node for node in log_graph.nodes if node[0] in starting_types]
+    while start_nodes:
+        local_start = start_nodes[0]
+        if not local_start in local_graph.nodes:
+            cases.append((set(),{local_start[1]}))
+            start_nodes.remove(local_start)
+        else:
+            reachable_nodes = networkx.descendants(local_graph,source=local_start)
+            events = {node[1] for node in reachable_nodes if node[0] in activities}
+            objects = {node[1] for node in reachable_nodes if node[0] in types} | {local_start[1]}
+            cases.append((events,objects))
+            start_nodes = [node for node in start_nodes if node[1] not in objects]
+    return cases
+
+
+
+
+
+def check_variance(ocel,log_graph, starting_types, specification, performance_indicator, additional,activities, types,rel):
+    case_list = generate_cases(log_graph,starting_types,specification,activities,types)
     values = [performance_indicator(ocel,case,additional) for case in case_list]
     distribution = {v:values.count(v) for v in set(values)}
     average = sum( ((v * p) / len(distribution)) for v,p in distribution.items())
     variance = sum( (average - v) * (average - v) * p for v,p in distribution.items())
-    return (math.sqrt(variance) / average) if average else 0.0
+    print((math.sqrt(variance) / average) if average else 0.0)
+    return (rel,(math.sqrt(variance) / average) if average else 0.0)
