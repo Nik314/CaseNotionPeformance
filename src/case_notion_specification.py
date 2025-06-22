@@ -44,5 +44,4 @@ def check_variance(ocel,log_graph, starting_types, specification, performance_in
     distribution = {v:values.count(v) for v in set(values)}
     average = sum( ((v * p) / len(distribution)) for v,p in distribution.items())
     variance = sum( (average - v) * (average - v) * p for v,p in distribution.items())
-    print((math.sqrt(variance) / average) if average else 0.0)
     return (rel,(math.sqrt(variance) / average) if average else 0.0)
