@@ -28,6 +28,7 @@ if __name__ == "__main__":
     frame["Test"] = (frame["Relative Variance"])*(frame["Connectivity"])*frame["Types"]*(frame["Types"] + frame["Activities"])*(frame["Types"] + frame["Activities"])
     frame.plot(x="Test", y="Runtime", figsize=(16,8),style="o")
     plt.savefig("results/experiment1.png")
+    frame[["Test","Runtime"]].to_csv("results/exp1_visual.csv")
     print(frame)
 
 
