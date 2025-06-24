@@ -22,8 +22,8 @@ def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,perf
         if not investigation or max([entry[1] for entry in investigation]) < 0:
             break
         else:
-            added_node = {node for node in available_nodes if (node, max([entry[1]
-                        for entry in investigation])) in investigation}.pop()
+            added_node = sorted([node for node in available_nodes if (node, max([entry[1]
+                        for entry in investigation])) in investigation])[0]
             expanded_nodes.add(added_node)
             local_relations = local_relations | {rel for rel in activity_type_relations | type_type_relation if
                         rel[0] == added_node}

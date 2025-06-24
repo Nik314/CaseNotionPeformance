@@ -14,12 +14,12 @@ def get_log_graph(ocel):
             zip(ocel.relations["ocel:type"].to_list(), ocel.relations["ocel:oid"].to_list())))
     unique_relations |= set(zip(zip(ocel.relations["ocel:type"].to_list(), ocel.relations["ocel:oid"].to_list()),
                                zip(ocel.relations["ocel:activity"].to_list(), ocel.relations["ocel:eid"].to_list())))
-    return networkx.from_edgelist(unique_relations)
+    return networkx.DiGraph(unique_relations)
 
 
 
 def generate_cases(log_graph,starting_types,relations,activities,types):
-    local_graph = networkx.from_edgelist([edge for edge in log_graph.edges if (edge[0][0],edge[1][0]) in relations])
+    local_graph = networkx.DiGraph([edge for edge in log_graph.edges if (edge[0][0],edge[1][0]) in relations])
     cases, start_nodes = [], [node for node in log_graph.nodes if node[0] in starting_types]
     while start_nodes:
         local_start = start_nodes[0]
@@ -32,6 +32,7 @@ def generate_cases(log_graph,starting_types,relations,activities,types):
             objects = {node[1] for node in reachable_nodes if node[0] in types} | {local_start[1]}
             cases.append((events,objects))
             start_nodes = [node for node in start_nodes if node[1] not in objects]
+
     return cases
 
 
