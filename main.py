@@ -4,16 +4,22 @@ import os
 import pandas
 import numpy
 import matplotlib.pyplot as plt
-from src.experiments import runtime_experiment,variance_experiment
-
+from src.experiments import runtime_experiment,variance_experiment,run_case_study
+import seaborn
+plt.rcParams.update({'font.size': 18})
 
 
 if __name__ == "__main__":
     pass
 
+    start,result = run_case_study()
+    print(start)
+    for entry in result:
+        print(entry[0].replace(" ",""),entry[1].replace(" ",""))
 
-    runtime_experiment("data","results")
-    variance_experiment("data","results")
+
+    #runtime_experiment("data","results")
+    #variance_experiment("data","results")
 
 
     connectivity = []
@@ -27,10 +33,16 @@ if __name__ == "__main__":
 
     frame = pandas.read_csv("results/experiment1.csv")
     frame["Connectivity"] = connectivity
-    frame["Test"] = (frame["Relative Variance"])*(frame["Connectivity"])*frame["Types"]*(frame["Types"] + frame["Activities"])*(frame["Types"] + frame["Activities"])
-    frame[["Test","Runtime"]].to_csv("results/exp1_visual.csv")
-    print(frame)
-
+    frame["Test"] = (frame["Connectivity"])*(frame["Types"] + frame["Activities"])*(frame["Types"] + frame["Activities"])
+    plt.figure(figsize=(16, 8))
+    plt.grid()
+    plt.ylim(0,4000)
+    plt.xlim(0,10*10**7)
+    seaborn.scatterplot(frame,x="Test",y="Runtime")
+    plt.xlabel("Runtime In Seconds")
+    plt.xlabel("Input Log Size Property Product")
+    #plt.plot([0, 10*10**7], [0,4000], linewidth=2)
+    plt.savefig("results/experiment1.png",bbox_inches='tight')
 
     newframe = pandas.read_csv("results/experiment2.csv")
     traditional = newframe[newframe["Notion"] == "Traditional"]
@@ -53,22 +65,31 @@ if __name__ == "__main__":
         experiment2_visual.loc[experiment2_visual.shape[0]] = (log, numpy.min(series), numpy.max(series),
             numpy.mean(series), numpy.percentile(series,25), numpy.percentile(series,75), numpy.median(series), " (Connected)")
 
-
-    experiment2_visual2 = experiment2_visual[["Log","Max"]]
-    experiment2_visual2 = experiment2_visual2.groupby("Log")["Max"].max().to_dict()
-    experiment2_visual2 = {key.split("/")[1].split("_")[0]:{"Manual":value, "Automated":frame[frame["Log"] ==key]["Relative Variance"].max()}
-                           for key,value in experiment2_visual2.items()}
-    pandas.DataFrame().from_dict(experiment2_visual2).transpose().to_csv("results/exp2_visual2.csv")
-
-    experiment2_visual["Log"] = experiment2_visual["Log"].apply(lambda log:log.split("/")[1].split("_")[0]) + experiment2_visual["Notion"]
-    experiment2_visual.to_csv("results/exp2_visual.csv")
+        series = frame[frame["Log"] == log]["Relative Variance"].to_list()
+        experiment2_visual.loc[experiment2_visual.shape[0]] = (log, numpy.min(series), numpy.max(series),
+            numpy.mean(series), numpy.percentile(series,25), numpy.percentile(series,75), numpy.median(series), " (Automated)")
 
 
-    for entry in eval(frame.iloc[4]["Relations"]):
-        print(entry[0].replace(" ","")," ",entry[1].replace(" ",""))
+    experiment2_visual2 = experiment2_visual[["Notion","Max","Log"]]
+    experiment2_visual2 = experiment2_visual2[experiment2_visual2["Notion"].isin([" (Automated)"," (Traditional)"])]
+    experiment2_visual2["Notion"] = experiment2_visual2["Notion"].apply(lambda e:e if e == " (Automated)" else " (Manual)")
+    plt.figure(figsize=(16, 8))
+    plt.grid()
+    plt.ylim(-5,400)
+    experiment2_visual2["Label"] = experiment2_visual2["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
+    seaborn.barplot(experiment2_visual2,x="Label",y="Max",hue="Notion")
+    plt.ylabel("Best Relative Variance")
+    plt.xlabel("Input Log")
+    plt.savefig("results/experiment22.png",bbox_inches='tight')
 
-
-
+    plt.figure(figsize=(16, 8))
+    plt.grid()
+    plt.ylim(-5,200)
+    newframe["Label"] = newframe["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
+    seaborn.boxplot(newframe,x="Label",y="Relative Variance",hue="Notion",whis=10000000000000)
+    plt.xlabel("Relative Variance")
+    plt.xlabel("Input Log")
+    plt.savefig("results/experiment2.png",bbox_inches='tight')
 
 
 

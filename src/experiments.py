@@ -9,6 +9,19 @@ from src.optimization_framework import (get_optimized_case_notion_from_existing,
 
 
 
+
+
+def run_case_study():
+
+    file = "data/09_ocel_standard_hinge.xml"
+    try:
+        ocel = pm4py.read_ocel(file)
+    except:
+        ocel = pm4py.read_ocel2(file)
+
+    variance, start, spec = get_optimized_case_notion_from_framework(ocel, get_emission_cost, {"att":"i_steel-waste[kg]"})
+    return start, spec
+
 def runtime_experiment(log_dir, result_dir):
 
     result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Relative Variance","Start","Relations","Runtime"])
