@@ -12,10 +12,8 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
-    start,result = run_case_study()
-    print(start)
-    for entry in result:
-        print(entry[0].replace(" ",""),entry[1].replace(" ",""))
+    run_case_study()
+    exit()
 
 
     #runtime_experiment("data","results")

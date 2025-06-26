@@ -19,10 +19,35 @@ def run_case_study():
     except:
         ocel = pm4py.read_ocel2(file)
 
-    variance, start, spec = get_optimized_case_notion_from_framework(ocel, get_emission_cost, {"att":"i_steel-waste[kg]"})
+    total_variance, start, spec = get_optimized_case_notion_from_framework(ocel,
+            get_emission_cost, {"att":"s_co2e[kg]"})
+
+    nodes = set(sum([[entry[0], entry[1]] for entry in spec],[]))
+    activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
+    log_graph = get_log_graph(ocel)
+
+    print("Checking 1% Relevance Of Node Expansion")
+    sorting = {}
+    for node in nodes:
+        variance = check_variance(ocel,log_graph,start,[entry for entry in spec if node not in entry],get_emission_cost,
+                {"att":"s_co2e[kg]"},activities,object_types,node)[1]
+        sorting[node] = (total_variance - variance) / total_variance
+        print(node,variance)
+
+    print(sorting)
+    remaining_relations =  [rel for rel in spec if all(sorting[n] > 0.01 for n in rel)]
+
+    print(remaining_relations)
+
+    for entry in remaining_relations:
+        print(entry)
+
     return start, spec
 
+
+
 def runtime_experiment(log_dir, result_dir):
+
 
     result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Relative Variance","Start","Relations","Runtime"])
 
