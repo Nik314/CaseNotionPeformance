@@ -12,9 +12,12 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
+
+    run_case_study()
+    exit()
     #runtime_experiment("data","results")
     #variance_experiment("data","results")
-    #run_case_study()
+
 
     connectivity = []
     for file in os.listdir("data"):

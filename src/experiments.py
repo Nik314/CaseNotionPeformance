@@ -1,7 +1,11 @@
+import numpy
 import pandas
 import pm4py
 import time
 import os
+import networkx
+
+from src.case_notion_specification import generate_cases
 from src.performance_indicator import get_cycle_time,get_emission_cost,get_ressource_usage
 from src.optimization_framework import (get_optimized_case_notion_from_existing,
         get_optimized_case_notion_from_framework,get_log_graph,get_connected_case_notion,
@@ -13,46 +17,47 @@ from src.optimization_framework import (get_optimized_case_notion_from_existing,
 
 def run_case_study():
 
-    file = "data/09_ocel_standard_hinge.xml"
+    file = "data/08_ocel_legacy_recruiting.jsonocel"
     try:
         ocel = pm4py.read_ocel(file)
     except:
         ocel = pm4py.read_ocel2(file)
 
-    #total_variance, start, spec = get_optimized_case_notion_from_framework(ocel,
-    #        get_emission_cost, {"att":"s_co2e[kg]"})
 
-    total_variance =  2959.7535823445896
-    start = {"SteelPin"}
-    spec =  {('CoatPart', 'Machine'), ('CoatPart', 'Workstation'), ('CheckFemalePart', 'FemalePart'),
-     ('CheckMalePart', 'MalePart'), ('CoatPart', 'FormedPart'), ('AssembleHinge', 'FemalePart'),
-     ('CuttFemalePart', 'FemalePart'), ('AssembleHinge', 'MalePart'), ('Hinge', 'AssembleHinge'),
-     ('Hinge', 'HingePack'), ('Hinge', 'PackHinges'), ('SteelPin', 'AssembleHinge'), ('CheckMalePart', 'Workstation'),
-     ('CuttFemalePart', 'Machine'), ('AssembleHinge', 'SteelPin'), ('AssembleHinge', 'Hinge'),
-     ('AssembleHinge', 'Workstation'), ('CheckMalePart', 'Worker'), ('AssembleHinge', 'Machine'),
-     ('CuttFemalePart', 'Workstation'), ('CheckFemalePart', 'Workstation'), ('CuttFemalePart', 'FormedPart'),
-     ('CheckFemalePart', 'Worker')}
+    for i in range(0,2):
+        total_variance, start, spec = get_optimized_case_notion_from_framework(ocel, get_cycle_time,{})
+        activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
+        log_graph = get_log_graph(ocel)
+        cases = generate_cases(log_graph,start,spec,activities,object_types)
 
-    nodes = set(sum([[entry[0], entry[1]] for entry in spec],[]))
-    activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
-    log_graph = get_log_graph(ocel)
+        sorted_dict = {}
+        for case in cases:
+            value = get_cycle_time(ocel,case, {})
+            if value in sorted_dict.keys():
+                sorted_dict[value].append(case)
+            else:
+                sorted_dict[value] = [case]
 
-    print("Checking 1% Relevance Of Node Expansion")
-    sorting = {}
-    for node in nodes:
-        variance = check_variance(ocel,log_graph,start,[entry for entry in spec if node not in entry],get_emission_cost,
-                {"att":"s_co2e[kg]"},activities,object_types,node)[1]
-        sorting[node] = (total_variance - variance) / total_variance
-        print(node,variance)
+            relations = ocel.relations[ocel.relations["ocel:eid"].isin(case[0]) & ocel.relations["ocel:oid"].isin(case[1])]
+            print("##############################################")
+            #print(relations[["ocel:oid","ocel:eid","ocel:activity"]])
+            print(case)
+            print(value)
+            print("##############################################")
 
-    print(sorting)
-    remaining_relations =  [rel for rel in spec if all(sorting[n] > 0.01 for n in rel)]
-    print(remaining_relations)
+        print("Best Performance Value", numpy.min(list(sorted_dict.keys())))
+        print("Worst Performance Value", numpy.max(list(sorted_dict.keys())))
 
-    for entry in remaining_relations:
-        print(entry)
+        filter_events = sum([list(case[0]) for case in sorted_dict[numpy.max(list(sorted_dict.keys()))]],[])
+        filter_objects = sum([list(case[0]) for case in sorted_dict[numpy.max(list(sorted_dict.keys()))]],[])
+        ocel = pm4py.filter_ocel_events(ocel,filter_events,positive=False)
+        ocel = pm4py.filter_ocel_objects(ocel,filter_objects,positive=False)
 
-    return start, spec
+
+
+        for entry in spec:
+            print(entry[0].replace(" ",""),entry[1].replace(" ",""))
+
 
 
 
