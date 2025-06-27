@@ -12,13 +12,9 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
-    run_case_study()
-    exit()
-
-
     #runtime_experiment("data","results")
     #variance_experiment("data","results")
-
+    #run_case_study()
 
     connectivity = []
     for file in os.listdir("data"):
@@ -30,12 +26,11 @@ if __name__ == "__main__":
         connectivity.append(ocel.relations.shape[0] + ocel.o2o.shape[0])
 
     frame = pandas.read_csv("results/experiment1.csv")
+    frame["Relative Variance"] = frame["Relative Variance"].apply(lambda entry:entry**0.5)
     frame["Connectivity"] = connectivity
     frame["Test"] = (frame["Connectivity"])*(frame["Types"] + frame["Activities"])*(frame["Types"] + frame["Activities"])
     plt.figure(figsize=(16, 8))
     plt.grid()
-    plt.ylim(0,4000)
-    plt.xlim(0,10*10**7)
     seaborn.scatterplot(frame,x="Test",y="Runtime")
     plt.xlabel("Runtime In Seconds")
     plt.xlabel("Input Log Size Property Product")
@@ -43,6 +38,7 @@ if __name__ == "__main__":
     plt.savefig("results/experiment1.png",bbox_inches='tight')
 
     newframe = pandas.read_csv("results/experiment2.csv")
+    newframe["Relative Variance"] = newframe["Relative Variance"].apply(lambda entry:entry**0.5)
     traditional = newframe[newframe["Notion"] == "Traditional"]
     advanced = newframe[newframe["Notion"] == "Advanced"]
     connected = newframe[newframe["Notion"] == "Connected"]
@@ -73,19 +69,18 @@ if __name__ == "__main__":
     experiment2_visual2["Notion"] = experiment2_visual2["Notion"].apply(lambda e:e if e == " (Automated)" else " (Manual)")
     plt.figure(figsize=(16, 8))
     plt.grid()
-    plt.ylim(-5,400)
     experiment2_visual2["Label"] = experiment2_visual2["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
     seaborn.barplot(experiment2_visual2,x="Label",y="Max",hue="Notion")
-    plt.ylabel("Best Relative Variance")
+    plt.ylabel("Highest Standard Deviation")
     plt.xlabel("Input Log")
     plt.savefig("results/experiment22.png",bbox_inches='tight')
 
     plt.figure(figsize=(16, 8))
     plt.grid()
-    plt.ylim(-5,200)
+   # plt.ylim(-5,200)
     newframe["Label"] = newframe["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
     seaborn.boxplot(newframe,x="Label",y="Relative Variance",hue="Notion",whis=10000000000000)
-    plt.xlabel("Relative Variance")
+    plt.xlabel("Standard Deviation")
     plt.xlabel("Input Log")
     plt.savefig("results/experiment2.png",bbox_inches='tight')
 

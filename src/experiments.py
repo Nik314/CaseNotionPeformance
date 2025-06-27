@@ -19,8 +19,19 @@ def run_case_study():
     except:
         ocel = pm4py.read_ocel2(file)
 
-    total_variance, start, spec = get_optimized_case_notion_from_framework(ocel,
-            get_emission_cost, {"att":"s_co2e[kg]"})
+    #total_variance, start, spec = get_optimized_case_notion_from_framework(ocel,
+    #        get_emission_cost, {"att":"s_co2e[kg]"})
+
+    total_variance =  2959.7535823445896
+    start = {"SteelPin"}
+    spec =  {('CoatPart', 'Machine'), ('CoatPart', 'Workstation'), ('CheckFemalePart', 'FemalePart'),
+     ('CheckMalePart', 'MalePart'), ('CoatPart', 'FormedPart'), ('AssembleHinge', 'FemalePart'),
+     ('CuttFemalePart', 'FemalePart'), ('AssembleHinge', 'MalePart'), ('Hinge', 'AssembleHinge'),
+     ('Hinge', 'HingePack'), ('Hinge', 'PackHinges'), ('SteelPin', 'AssembleHinge'), ('CheckMalePart', 'Workstation'),
+     ('CuttFemalePart', 'Machine'), ('AssembleHinge', 'SteelPin'), ('AssembleHinge', 'Hinge'),
+     ('AssembleHinge', 'Workstation'), ('CheckMalePart', 'Worker'), ('AssembleHinge', 'Machine'),
+     ('CuttFemalePart', 'Workstation'), ('CheckFemalePart', 'Workstation'), ('CuttFemalePart', 'FormedPart'),
+     ('CheckFemalePart', 'Worker')}
 
     nodes = set(sum([[entry[0], entry[1]] for entry in spec],[]))
     activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
@@ -36,7 +47,6 @@ def run_case_study():
 
     print(sorting)
     remaining_relations =  [rel for rel in spec if all(sorting[n] > 0.01 for n in rel)]
-
     print(remaining_relations)
 
     for entry in remaining_relations:
