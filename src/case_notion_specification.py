@@ -39,11 +39,10 @@ def generate_cases(log_graph,starting_types,relations,activities,types):
 
 
 
-def check_variance(ocel,log_graph, starting_types, specification, performance_indicator, additional,activities, types,rel):
+def check_deviation(ocel,log_graph, starting_types, specification, performance_indicator, additional,activities, types,rel):
     case_list = generate_cases(log_graph,starting_types,specification,activities,types)
     values = [performance_indicator(ocel,case,additional) for case in case_list]
     distribution = {v:values.count(v) for v in set(values)}
     average = sum( ((v * p) / len(distribution)) for v,p in distribution.items())
     variance = sum( (average - v) * (average - v) * p for v,p in distribution.items())
-    #return (rel,(math.sqrt(variance) / average) if average else 0.0)
     return (rel,(math.sqrt(variance)) if average else 0.0)

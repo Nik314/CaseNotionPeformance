@@ -1,5 +1,3 @@
-import pandas
-
 
 def get_log_properties(ocel):
 

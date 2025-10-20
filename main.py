@@ -1,10 +1,6 @@
-import pm4py
-import time
-import os
 import pandas
-import numpy
 import matplotlib.pyplot as plt
-from src.experiments import runtime_experiment,variance_experiment,run_case_study
+from src.experiments import runtime_experiment,deviation_experiment,run_case_study
 import seaborn
 plt.rcParams.update({'font.size': 18})
 
@@ -12,80 +8,22 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
-
-    run_case_study()
-    exit()
-    #runtime_experiment("data","results")
-    #variance_experiment("data","results")
-
-
-    connectivity = []
-    for file in os.listdir("data"):
-        file = "data" + "/" + file
-        try:
-            ocel = pm4py.read_ocel(file)
-        except:
-            ocel = pm4py.read_ocel2(file)
-        connectivity.append(ocel.relations.shape[0] + ocel.o2o.shape[0])
+    runtime_experiment("data","results")
+    deviation_experiment("data","results")
+    #run_case_study()
 
     frame = pandas.read_csv("results/experiment1.csv")
-    frame["Relative Variance"] = frame["Relative Variance"].apply(lambda entry:entry**0.5)
-    frame["Connectivity"] = connectivity
-    frame["Test"] = (frame["Connectivity"])*(frame["Types"] + frame["Activities"])*(frame["Types"] + frame["Activities"])
-    plt.figure(figsize=(16, 8))
-    plt.grid()
-    seaborn.scatterplot(frame,x="Test",y="Runtime")
-    plt.xlabel("Runtime In Seconds")
-    plt.xlabel("Input Log Size Property Product")
-    #plt.plot([0, 10*10**7], [0,4000], linewidth=2)
-    plt.savefig("results/experiment1.png",bbox_inches='tight')
-
+    frame["Notion"] = ["Automated"]*frame.shape[0]
     newframe = pandas.read_csv("results/experiment2.csv")
-    newframe["Relative Variance"] = newframe["Relative Variance"].apply(lambda entry:entry**0.5)
-    traditional = newframe[newframe["Notion"] == "Traditional"]
-    advanced = newframe[newframe["Notion"] == "Advanced"]
-    connected = newframe[newframe["Notion"] == "Connected"]
 
-    experiment2_visual = pandas.DataFrame(columns = ["Log","Min","Max","Mean","P25","P75","Median","Notion"])
+    plot_data = pandas.concat([frame[["Log","Notion","Standard Deviation"]],newframe[["Log","Notion","Standard Deviation"]]])
+    plot_data["Log"] = plot_data["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
 
-    for log in newframe["Log"].unique():
-
-        series = traditional[traditional["Log"] == log]["Relative Variance"].to_list()
-        experiment2_visual.loc[experiment2_visual.shape[0]] = (log, numpy.min(series), numpy.max(series),
-            numpy.mean(series), numpy.percentile(series,25), numpy.percentile(series,75), numpy.median(series), " (Traditional)")
-
-        series = advanced[advanced["Log"] == log]["Relative Variance"].to_list()
-        experiment2_visual.loc[experiment2_visual.shape[0]] = (log, numpy.min(series), numpy.max(series),
-            numpy.mean(series), numpy.percentile(series,25), numpy.percentile(series,75), numpy.median(series), " (Advanced)")
-
-        series = connected[connected["Log"] == log]["Relative Variance"].to_list()
-        experiment2_visual.loc[experiment2_visual.shape[0]] = (log, numpy.min(series), numpy.max(series),
-            numpy.mean(series), numpy.percentile(series,25), numpy.percentile(series,75), numpy.median(series), " (Connected)")
-
-        series = frame[frame["Log"] == log]["Relative Variance"].to_list()
-        experiment2_visual.loc[experiment2_visual.shape[0]] = (log, numpy.min(series), numpy.max(series),
-            numpy.mean(series), numpy.percentile(series,25), numpy.percentile(series,75), numpy.median(series), " (Automated)")
-
-
-    experiment2_visual2 = experiment2_visual[["Notion","Max","Log"]]
-    experiment2_visual2 = experiment2_visual2[experiment2_visual2["Notion"].isin([" (Automated)"," (Traditional)"])]
-    experiment2_visual2["Notion"] = experiment2_visual2["Notion"].apply(lambda e:e if e == " (Automated)" else " (Manual)")
-    plt.figure(figsize=(16, 8))
+    seaborn.swarmplot(plot_data,hue="Notion",x="Log",y="Standard Deviation")
     plt.grid()
-    experiment2_visual2["Label"] = experiment2_visual2["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
-    seaborn.barplot(experiment2_visual2,x="Label",y="Max",hue="Notion")
-    plt.ylabel("Highest Standard Deviation")
-    plt.xlabel("Input Log")
-    plt.savefig("results/experiment22.png",bbox_inches='tight')
+    plt.show()
 
-    plt.figure(figsize=(16, 8))
-    plt.grid()
-   # plt.ylim(-5,200)
-    newframe["Label"] = newframe["Log"].apply(lambda log:log.split("/")[1].split("_")[0])
-    seaborn.boxplot(newframe,x="Label",y="Relative Variance",hue="Notion",whis=10000000000000)
-    plt.xlabel("Standard Deviation")
-    plt.xlabel("Input Log")
-    plt.savefig("results/experiment2.png",bbox_inches='tight')
+
 
 
 
