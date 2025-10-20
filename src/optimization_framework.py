@@ -14,7 +14,7 @@ def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,perf
 
         available_nodes = set(
             sum([[rel[0], rel[1]] for rel in activity_type_relations | type_type_relation], [])) - expanded_nodes
-        print(f"Potential Expansions Left For {ot}: {len(available_nodes)} @{local_deviation} Relative deviation")
+        print(f"Potential Expansions Left For {ot}: {len(available_nodes)} @{local_deviation} Deviation")
         print(local_relations)
         investigation = [check_deviation(ocel, log_graph, local_start, local_relations |
             {rel for rel in activity_type_relations | type_type_relation if rel[0] == node}, performance_indicator,

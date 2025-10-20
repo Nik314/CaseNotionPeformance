@@ -37,8 +37,6 @@ def generate_cases(log_graph,starting_types,relations,activities,types):
 
 
 
-
-
 def check_deviation(ocel,log_graph, starting_types, specification, performance_indicator, additional,activities, types,rel):
     case_list = generate_cases(log_graph,starting_types,specification,activities,types)
     values = [performance_indicator(ocel,case,additional) for case in case_list]
