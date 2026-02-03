@@ -31,11 +31,10 @@ def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,perf
             local_relations = local_relations | {rel for rel in activity_type_relations | type_type_relation if
                         rel[0] == added_node}
 
-        local_result = check_property(ocel, log_graph, ot, local_relations, performance_indicator, additional,
+        local_result = check_property(ocel, log_graph, local_start, local_relations, performance_indicator, additional,
                                           activities, object_types, dis_property)
     print(f"{ot} Done @{local_result} Result!")
     return local_start,local_relations,local_result
-
 
 
 def get_optimized_case_notion_from_framework(ocel, dis_property, performance_indicator, additional):

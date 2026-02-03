@@ -4,6 +4,7 @@ import networkx
 def get_log_graph(ocel):
 
     lookup = ocel.objects.set_index("ocel:oid")["ocel:type"].to_dict()
+    print(lookup)
     ocel.o2o["ocel:oid"] = ocel.o2o["ocel:oid"].apply(lambda entry: (lookup[entry], entry))
     ocel.o2o["ocel:oid_2"] = ocel.o2o["ocel:oid_2"].apply(lambda entry: (lookup[entry], entry))
 

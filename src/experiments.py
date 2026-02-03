@@ -33,16 +33,16 @@ lookup_additional = {
     ("08",get_resource_usage):{"ocel:type":[""]},
     ("09",get_resource_usage):{"ocel:type":[""]},
     ("10",get_resource_usage):{"ocel:type":[""]},
-    ("01",get_total_costs):{{"ocel:attribute":[""]}},
-    ("02",get_total_costs):{{"ocel:attribute":[""]}},
-    ("03",get_total_costs):{{"ocel:attribute":[""]}},
-    ("04",get_total_costs):{{"ocel:attribute":[""]}},
-    ("05",get_total_costs):{{"ocel:attribute":[""]}},
-    ("06",get_total_costs):{{"ocel:attribute":[""]}},
-    ("07",get_total_costs):{{"ocel:attribute":[""]}},
-    ("08",get_total_costs):{{"ocel:attribute":[""]}},
-    ("09",get_total_costs):{{"ocel:attribute":[""]}},
-    ("10",get_total_costs):{{"ocel:attribute":[""]}},
+    ("01",get_total_costs):{"ocel:attribute":[""]},
+    ("02",get_total_costs):{"ocel:attribute":[""]},
+    ("03",get_total_costs):{"ocel:attribute":[""]},
+    ("04",get_total_costs):{"ocel:attribute":[""]},
+    ("05",get_total_costs):{"ocel:attribute":[""]},
+    ("06",get_total_costs):{"ocel:attribute":[""]},
+    ("07",get_total_costs):{"ocel:attribute":[""]},
+    ("08",get_total_costs):{"ocel:attribute":[""]},
+    ("09",get_total_costs):{"ocel:attribute":[""]},
+    ("10",get_total_costs):{"ocel:attribute":[""]},
 }
 
 def runtime_experiment(log_dir, result_dir):
@@ -50,16 +50,17 @@ def runtime_experiment(log_dir, result_dir):
     result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Property Value","Property","Measure","Start","Relations","Runtime"])
 
     for file in os.listdir(log_dir):
-        file = log_dir +"/" +file
-        try:
-            ocel = pm4py.read_ocel(file)
-        except:
-            ocel = pm4py.read_ocel2(file)
-
-        file_id = file.split["_"][0]
-
+        file = log_dir + "/" + file
         for performance_measure in [get_cycle_time]:
             for dis_property in [standard_deviation,skewness,kurtosis]:
+
+                try:
+                    ocel = pm4py.read_ocel(file)
+                except:
+                    ocel = pm4py.read_ocel2(file)
+
+                file_id = file.split("/")[-1].split("_")[0]
+
                 additional = lookup_additional[(file_id,performance_measure)]
                 runtime = time.time()
                 property_value, start, spec = get_optimized_case_notion_from_framework(ocel, dis_property, performance_measure, additional)
@@ -86,9 +87,7 @@ def property_experiment(log_dir,result_dir):
 
         activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
         log_graph = get_log_graph(ocel)
-
-
-        file_id = file.split["_"][0]
+        file_id = file.split("/")[-1].split("_")[0]
 
         for performance_measure in [get_cycle_time]:
             for dis_property in [standard_deviation,skewness,kurtosis]:
