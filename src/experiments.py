@@ -3,15 +3,111 @@ import pandas
 import pm4py
 import time
 import os
-import networkx
 
 from src.case_notion_specification import generate_cases
-from src.performance_indicator import get_cycle_time
-from src.optimization_framework import (get_optimized_case_notion_from_existing,
-        get_optimized_case_notion_from_framework,get_log_graph,get_connected_case_notion,
-        get_advanced_case_notion,get_traditional_case_notion,check_type,check_deviation,get_log_properties)
+from src.performance_indicator import *
+from src.distribution_properties import *
+from src.optimization_framework import *
 
 
+
+
+lookup_additional = {
+    ("01",get_cycle_time):{},
+    ("02",get_cycle_time):{},
+    ("03",get_cycle_time):{},
+    ("04",get_cycle_time):{},
+    ("05",get_cycle_time):{},
+    ("06",get_cycle_time):{},
+    ("07",get_cycle_time):{},
+    ("08",get_cycle_time):{},
+    ("09",get_cycle_time):{},
+    ("10",get_cycle_time):{},
+    ("01",get_resource_usage):{"ocel:type":[""]},
+    ("02",get_resource_usage):{"ocel:type":[""]},
+    ("03",get_resource_usage):{"ocel:type":[""]},
+    ("04",get_resource_usage):{"ocel:type":[""]},
+    ("05",get_resource_usage):{"ocel:type":[""]},
+    ("06",get_resource_usage):{"ocel:type":[""]},
+    ("07",get_resource_usage):{"ocel:type":[""]},
+    ("08",get_resource_usage):{"ocel:type":[""]},
+    ("09",get_resource_usage):{"ocel:type":[""]},
+    ("10",get_resource_usage):{"ocel:type":[""]},
+    ("01",get_total_costs):{{"ocel:attribute":[""]}},
+    ("02",get_total_costs):{{"ocel:attribute":[""]}},
+    ("03",get_total_costs):{{"ocel:attribute":[""]}},
+    ("04",get_total_costs):{{"ocel:attribute":[""]}},
+    ("05",get_total_costs):{{"ocel:attribute":[""]}},
+    ("06",get_total_costs):{{"ocel:attribute":[""]}},
+    ("07",get_total_costs):{{"ocel:attribute":[""]}},
+    ("08",get_total_costs):{{"ocel:attribute":[""]}},
+    ("09",get_total_costs):{{"ocel:attribute":[""]}},
+    ("10",get_total_costs):{{"ocel:attribute":[""]}},
+}
+
+def runtime_experiment(log_dir, result_dir):
+
+    result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Property Value","Property","Measure","Start","Relations","Runtime"])
+
+    for file in os.listdir(log_dir):
+        file = log_dir +"/" +file
+        try:
+            ocel = pm4py.read_ocel(file)
+        except:
+            ocel = pm4py.read_ocel2(file)
+
+        file_id = file.split["_"][0]
+
+        for performance_measure in [get_cycle_time]:
+            for dis_property in [standard_deviation,skewness,kurtosis]:
+                additional = lookup_additional[(file_id,performance_measure)]
+                runtime = time.time()
+                property_value, start, spec = get_optimized_case_notion_from_framework(ocel, dis_property, performance_measure, additional)
+                runtime = time.time() - runtime
+                result.loc[result.shape[0]] = (file,ocel.relations["ocel:oid"].nunique(),ocel.relations["ocel:eid"].nunique(),
+                    ocel.relations["ocel:activity"].nunique(),ocel.relations["ocel:type"].nunique(),
+                                property_value,dis_property,performance_measure, start,spec,runtime)
+                result.to_csv(result_dir+"/experiment1.csv")
+                print(result)
+
+
+
+
+def deviation_experiment(log_dir,result_dir):
+
+    result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Standard Deviation","Start","Relations","Notion"])
+
+    for file in os.listdir(log_dir):
+        file = log_dir +"/" +file
+        try:
+            ocel = pm4py.read_ocel(file)
+        except:
+            ocel = pm4py.read_ocel2(file)
+
+        activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
+        log_graph = get_log_graph(ocel)
+
+        for ot,spec in get_traditional_case_notion(activity_type_relations,type_type_relation,object_types,activities):
+            new_deviation = check_deviation(ocel,log_graph,ot,spec,get_cycle_time, {},activities,object_types,None)[1]
+            result.loc[result.shape[0]] =  (file,ocel.relations["ocel:oid"].nunique(),ocel.relations["ocel:eid"].nunique(),
+                                            ocel.relations["ocel:activity"].nunique(),ocel.relations["ocel:type"].nunique(),new_deviation,
+                                            ot,spec,"Traditional")
+            result.to_csv(result_dir+"/experiment2.csv")
+
+
+        for ot,spec in get_connected_case_notion(activity_type_relations,type_type_relation,object_types,activities):
+            new_deviation = check_deviation(ocel,log_graph,ot,spec,get_cycle_time, {},activities,object_types,None)[1]
+            result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
+                                ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(), new_deviation,
+                                ot, spec, "Connected")
+            result.to_csv(result_dir+"/experiment2.csv")
+
+        for ot,spec in get_advanced_case_notion(activity_type_relations,type_type_relation,object_types,activities,divergence):
+            new_deviation = check_deviation(ocel,log_graph,ot,spec,get_cycle_time, {},activities,object_types,None)[1]
+            result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
+                                ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(), new_deviation,
+                                ot, spec, "Advanced")
+            result.to_csv(result_dir+"/experiment2.csv")
 
 
 
@@ -59,65 +155,4 @@ def run_case_study():
             print(entry[0].replace(" ",""),entry[1].replace(" ",""))
 
 
-
-
-def runtime_experiment(log_dir, result_dir):
-
-
-    result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Standard Deviation","Start","Relations","Runtime"])
-
-    for file in os.listdir(log_dir):
-        file = log_dir +"/" +file
-        try:
-            ocel = pm4py.read_ocel(file)
-        except:
-            ocel = pm4py.read_ocel2(file)
-
-        runtime = time.time()
-        new_deviation, start, spec = get_optimized_case_notion_from_framework(ocel, get_cycle_time, {})
-        runtime = time.time() - runtime
-        result.loc[result.shape[0]] = (file,ocel.relations["ocel:oid"].nunique(),ocel.relations["ocel:eid"].nunique(),
-                                        ocel.relations["ocel:activity"].nunique(),ocel.relations["ocel:type"].nunique(),new_deviation,
-                                        start,spec,runtime)
-        result.to_csv(result_dir+"/experiment1.csv")
-        print(result)
-
-
-
-
-def deviation_experiment(log_dir,result_dir):
-
-    result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Standard Deviation","Start","Relations","Notion"])
-
-    for file in os.listdir(log_dir):
-        file = log_dir +"/" +file
-        try:
-            ocel = pm4py.read_ocel(file)
-        except:
-            ocel = pm4py.read_ocel2(file)
-
-        activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
-        log_graph = get_log_graph(ocel)
-
-        for ot,spec in get_traditional_case_notion(activity_type_relations,type_type_relation,object_types,activities):
-            new_deviation = check_deviation(ocel,log_graph,ot,spec,get_cycle_time, {},activities,object_types,None)[1]
-            result.loc[result.shape[0]] =  (file,ocel.relations["ocel:oid"].nunique(),ocel.relations["ocel:eid"].nunique(),
-                                            ocel.relations["ocel:activity"].nunique(),ocel.relations["ocel:type"].nunique(),new_deviation,
-                                            ot,spec,"Traditional")
-            result.to_csv(result_dir+"/experiment2.csv")
-
-
-        for ot,spec in get_connected_case_notion(activity_type_relations,type_type_relation,object_types,activities):
-            new_deviation = check_deviation(ocel,log_graph,ot,spec,get_cycle_time, {},activities,object_types,None)[1]
-            result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
-                                ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(), new_deviation,
-                                ot, spec, "Connected")
-            result.to_csv(result_dir+"/experiment2.csv")
-
-        for ot,spec in get_advanced_case_notion(activity_type_relations,type_type_relation,object_types,activities,divergence):
-            new_deviation = check_deviation(ocel,log_graph,ot,spec,get_cycle_time, {},activities,object_types,None)[1]
-            result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
-                                ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(), new_deviation,
-                                ot, spec, "Advanced")
-            result.to_csv(result_dir+"/experiment2.csv")
 

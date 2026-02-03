@@ -1,7 +1,6 @@
 import math
 import networkx
 
-
 def get_log_graph(ocel):
 
     lookup = ocel.objects.set_index("ocel:oid")["ocel:type"].to_dict()
@@ -37,10 +36,9 @@ def generate_cases(log_graph,starting_types,relations,activities,types):
 
 
 
-def check_deviation(ocel,log_graph, starting_types, specification, performance_indicator, additional,activities, types,rel):
+def check_property(ocel,log_graph, starting_types, specification, performance_indicator,
+                    additional, activities, types, dis_property):
     case_list = generate_cases(log_graph,starting_types,specification,activities,types)
     values = [performance_indicator(ocel,case,additional) for case in case_list]
-    distribution = {v:values.count(v) for v in set(values)}
-    average = sum( ((v * p) / len(distribution)) for v,p in distribution.items())
-    variance = sum( (average - v) * (average - v) * p for v,p in distribution.items())
-    return (rel,(math.sqrt(variance)) if average else 0.0)
+    return dis_property(values)
+

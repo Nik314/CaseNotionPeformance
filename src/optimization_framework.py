@@ -1,25 +1,27 @@
 from src.auxillary_methods import get_log_properties
-from src.case_notion_specification import check_deviation, get_log_graph
+from src.case_notion_specification import check_property, get_log_graph
 from multiprocessing import Pool
 import copy
 
 
-def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,performance_indicator,additional,activities,object_types):
+def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,performance_indicator,dis_property,
+               additional,activities,object_types):
+
     local_start, expanded_nodes = {ot}, {ot}
     local_relations = {rel for rel in activity_type_relations | type_type_relation if rel[0] in local_start}
-    local_deviation = check_deviation(ocel, log_graph, local_start, local_relations, performance_indicator,
-                    additional, activities, object_types, None)[1]
+    local_result = check_property(ocel, log_graph, local_start, local_relations, performance_indicator,
+                    additional, activities, object_types,dis_property)
 
     while True:
 
         available_nodes = set(
             sum([[rel[0], rel[1]] for rel in activity_type_relations | type_type_relation], [])) - expanded_nodes
-        print(f"Potential Expansions Left For {ot}: {len(available_nodes)} @{local_deviation} Deviation")
+        print(f"Potential Expansions Left For {ot}: {len(available_nodes)} @{local_result} Result")
         print(local_relations)
-        investigation = [check_deviation(ocel, log_graph, local_start, local_relations |
+        investigation = [(node,check_property(ocel, log_graph, local_start, local_relations |
             {rel for rel in activity_type_relations | type_type_relation if rel[0] == node}, performance_indicator,
-            additional, activities, object_types,node) for node in available_nodes]
-        investigation = [(entry[0],entry[1] -local_deviation) for entry in investigation]
+            additional, activities, object_types,dis_property)) for node in available_nodes]
+        investigation = [(entry[0],entry[1] -local_result) for entry in investigation]
         if not investigation or max([entry[1] for entry in investigation]) < 0:
             break
         else:
@@ -29,80 +31,33 @@ def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,perf
             local_relations = local_relations | {rel for rel in activity_type_relations | type_type_relation if
                         rel[0] == added_node}
 
-        local_deviation = check_deviation(ocel, log_graph, ot, local_relations, performance_indicator, additional,
-                                          activities, object_types, None)[1]
-    print(f"{ot} Done @{local_deviation} Deviation!")
-    return local_start,local_relations,local_deviation
+        local_result = check_property(ocel, log_graph, ot, local_relations, performance_indicator, additional,
+                                          activities, object_types, dis_property)
+    print(f"{ot} Done @{local_result} Result!")
+    return local_start,local_relations,local_result
 
 
-def get_optimized_case_notion_from_framework(ocel, performance_indicator, additional):
+
+def get_optimized_case_notion_from_framework(ocel, dis_property, performance_indicator, additional):
 
     activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
     best_result, best_start_type, best_relations = 0,None,set()
     log_graph = get_log_graph(ocel)
 
     inputs = [(ot,copy.deepcopy(log_graph),copy.deepcopy(ocel),activity_type_relations,type_type_relation,
-               performance_indicator, additional,activities,object_types) for ot in object_types]
+               performance_indicator,dis_property,additional,activities,object_types) for ot in object_types]
     with Pool(len(object_types)) as pool:
         results = pool.starmap(check_type,inputs)
 
-    for local_start,local_relations,local_deviation in results:
+    for local_start,local_relations,local_result in results:
         print("Result For ", local_start)
         print(local_relations)
-        print(local_deviation)
+        print(local_result)
         print("------------------------------------")
-        if local_deviation > best_result:
-            best_result = local_deviation
+        if local_result > best_result:
+            best_result = local_result
             best_start_type = local_start
             best_relations = local_relations
-
-    print("Best Total Result:")
-    print(best_result)
-    print(best_start_type)
-    print(best_relations)
-    return best_result,best_start_type,best_relations
-
-
-
-
-def get_optimized_case_notion_from_existing(ocel, performance_indicator, additional):
-
-    activity_type_relations,type_type_relation,activities,object_types,divergence = get_log_properties(ocel)
-    best_result, best_start_type, best_relations = 0,None,set()
-    log_graph = get_log_graph(ocel)
-
-    for ot,spec in get_traditional_case_notion(activity_type_relations,type_type_relation,object_types,activities):
-        print("Checking Traditional Case Notion")
-        print("Starting Type ", ot)
-        new_deviation = check_deviation(ocel,log_graph,ot,spec,performance_indicator,additional,activities,object_types,None)[1]
-        print("Deviation Observed: ", new_deviation)
-        if new_deviation > best_result:
-            print("New Optimum Found")
-            best_result = new_deviation
-            best_start_type = ot
-            best_relations = spec
-
-    for ot,spec in get_connected_case_notion(activity_type_relations,type_type_relation,object_types,activities):
-        print("Checking Connected Case Notion")
-        print("Starting Type ", ot)
-        new_deviation = check_deviation(ocel,log_graph,ot,spec,performance_indicator,additional,activities,object_types,None)[1]
-        print("Deviation Observed: ", new_deviation)
-        if new_deviation > best_result:
-            print("New Optimum Found")
-            best_result = new_deviation
-            best_start_type = ot
-            best_relations = spec
-
-    for ot,spec in get_advanced_case_notion(activity_type_relations,type_type_relation,object_types,activities,divergence):
-        print("Checking Advanced Case Notion")
-        print("Starting Type ", ot)
-        new_deviation = check_deviation(ocel,log_graph,ot,spec,performance_indicator,additional,activities,object_types,None)[1]
-        print("Deviation Observed: ", new_deviation)
-        if new_deviation > best_result:
-            print("New Optimum Found")
-            best_result = new_deviation
-            best_start_type = ot
-            best_relations = spec
 
     print("Best Total Result:")
     print(best_result)
