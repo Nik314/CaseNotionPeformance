@@ -1,6 +1,6 @@
 import pandas
 import matplotlib.pyplot as plt
-from src.experiments import runtime_experiment,deviation_experiment,run_case_study
+from src.experiments import runtime_experiment,property_experiment,run_case_study
 import seaborn
 plt.rcParams.update({'font.size': 18})
 
@@ -8,10 +8,11 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
-    #runtime_experiment("data","results")
-    #deviation_experiment("data","results")
-    #run_case_study()
+    runtime_experiment("data","results")
+    property_experiment("data","results")
+    run_case_study()
 
+    exit()
     frame = pandas.read_csv("results/experiment1.csv")
     frame["Notion"] = ["Automated"]*frame.shape[0]
     newframe = pandas.read_csv("results/experiment2.csv")
