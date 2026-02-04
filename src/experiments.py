@@ -35,14 +35,14 @@ lookup_additional = {
     ("10",get_resource_usage):{"ocel:type":["MATNR"]},
     #("01",get_total_costs):{"ocel:attribute":[""]}, (no cost attribute available)
     ("02",get_total_costs):{"ocel:attribute":["Credit Amount (BSEG-WRBTR)"]},
-    ("03",get_total_costs):{"ocel:attribute":[""]},
-    ("04",get_total_costs):{"ocel:attribute":[""]},
-    ("05",get_total_costs):{"ocel:attribute":[""]},
-    ("06",get_total_costs):{"ocel:attribute":[""]},
-    ("07",get_total_costs):{"ocel:attribute":[""]},
-    ("08",get_total_costs):{"ocel:attribute":[""]},
-    ("09",get_total_costs):{"ocel:attribute":[""]},
-    ("10",get_total_costs):{"ocel:attribute":[""]},
+    ("03",get_total_costs):{"ocel:attribute":["price"]},
+    ("04",get_total_costs):{"ocel:attribute":["amount"]},
+    #("05",get_total_costs):{"ocel:attribute":[""]},(no cost attribute available)
+    #("06",get_total_costs):{"ocel:attribute":[""]},(no cost attribute available)
+    #("07",get_total_costs):{"ocel:attribute":[""]},(no cost attribute available)
+    ("08",get_total_costs):{"ocel:attribute":["Amount of Containers"]},
+    ("09",get_total_costs):{"ocel:attribute":["s_co2e[kg]"]},
+    #("10",get_total_costs):{"ocel:attribute":[""]},(no cost attribute available)
 }
 
 def runtime_experiment(log_dir, result_dir):

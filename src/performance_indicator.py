@@ -23,8 +23,11 @@ def get_total_costs(log, case, additional):
         object_value = 0.0
 
     try:
-        event_values = log.events[log.events["ocel:eid"].isin(case[0])][additional["ocel:attribute"]].sum().sum()
+        event_value = log.events[log.events["ocel:eid"].isin(case[0])][additional["ocel:attribute"]].sum().sum()
     except:
-        event_values = 0.0
+        event_value = 0.0
 
-    return object_value+event_values
+    try:
+        return float(object_value)+float(event_value)
+    except:
+        return 0.0
