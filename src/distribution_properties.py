@@ -10,11 +10,11 @@ def skewness(values):
     sigma = standard_deviation(values)
     if not sigma:
         return 0.0
-    return sum([((average - value)/sigma)**3 for value in values]) / len(values)
+    return abs(sum([((average - value)/sigma)**3 for value in values]) / len(values))
 
 def kurtosis(values):
     average = numpy.mean(values)
     sigma = standard_deviation(values)
     if not sigma:
         return 0.0
-    return (sum([((average - value)/sigma)**4 for value in values]) / len(values)) -3
+    return abs((sum([((average - value)/sigma)**4 for value in values]) / len(values)) -3)

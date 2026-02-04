@@ -23,18 +23,18 @@ lookup_additional = {
     ("08",get_cycle_time):{},
     ("09",get_cycle_time):{},
     ("10",get_cycle_time):{},
-    ("01",get_resource_usage):{"ocel:type":[""]},
-    ("02",get_resource_usage):{"ocel:type":[""]},
-    ("03",get_resource_usage):{"ocel:type":[""]},
-    ("04",get_resource_usage):{"ocel:type":[""]},
-    ("05",get_resource_usage):{"ocel:type":[""]},
-    ("06",get_resource_usage):{"ocel:type":[""]},
-    ("07",get_resource_usage):{"ocel:type":[""]},
-    ("08",get_resource_usage):{"ocel:type":[""]},
-    ("09",get_resource_usage):{"ocel:type":[""]},
-    ("10",get_resource_usage):{"ocel:type":[""]},
-    ("01",get_total_costs):{"ocel:attribute":[""]},
-    ("02",get_total_costs):{"ocel:attribute":[""]},
+    ("01",get_resource_usage):{"ocel:type":["managers","recruiters"]},
+    ("02",get_resource_usage):{"ocel:type":["material"]},
+    ("03",get_resource_usage):{"ocel:type":["Product"]},
+    ("04",get_resource_usage):{"ocel:type":["Supplier"]},
+    ("05",get_resource_usage):{"ocel:type":["HiringManager","Interviewer"]},
+    ("06",get_resource_usage):{"ocel:type":["Bed","Room"]},
+    ("07",get_resource_usage):{"ocel:type":["org:resource"]},
+    ("08",get_resource_usage):{"ocel:type":["Truck","Vehicle"]},
+    ("09",get_resource_usage):{"ocel:type":["Machine"]},
+    ("10",get_resource_usage):{"ocel:type":["MATNR"]},
+    #("01",get_total_costs):{"ocel:attribute":[""]}, (no cost attribute available)
+    ("02",get_total_costs):{"ocel:attribute":["Credit Amount (BSEG-WRBTR)"]},
     ("03",get_total_costs):{"ocel:attribute":[""]},
     ("04",get_total_costs):{"ocel:attribute":[""]},
     ("05",get_total_costs):{"ocel:attribute":[""]},
@@ -51,7 +51,7 @@ def runtime_experiment(log_dir, result_dir):
 
     for file in os.listdir(log_dir):
         file = log_dir + "/" + file
-        for performance_measure in [get_cycle_time]:
+        for performance_measure in [get_total_costs,get_cycle_time,get_resource_usage]:
             for dis_property in [standard_deviation,skewness,kurtosis]:
 
                 try:
@@ -61,7 +61,11 @@ def runtime_experiment(log_dir, result_dir):
 
                 file_id = file.split("/")[-1].split("_")[0]
 
-                additional = lookup_additional[(file_id,performance_measure)]
+                try:
+                    additional = lookup_additional[(file_id, performance_measure)]
+                except:
+                    continue
+
                 runtime = time.time()
                 property_value, start, spec = get_optimized_case_notion_from_framework(ocel, dis_property, performance_measure, additional)
                 runtime = time.time() - runtime
@@ -89,37 +93,41 @@ def property_experiment(log_dir,result_dir):
         log_graph = get_log_graph(ocel)
         file_id = file.split("/")[-1].split("_")[0]
 
-        for performance_measure in [get_cycle_time]:
+        for performance_measure in [get_total_costs,get_cycle_time,get_resource_usage]:
             for dis_property in [standard_deviation,skewness,kurtosis]:
-                additional = lookup_additional[(file_id,performance_measure)]
+
+                try:
+                    additional = lookup_additional[(file_id,performance_measure)]
+                except:
+                    continue
 
                 for ot,spec in get_traditional_case_notion(activity_type_relations,type_type_relation,object_types,activities):
                     new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)
                     result.loc[result.shape[0]] =  (file,ocel.relations["ocel:oid"].nunique(),ocel.relations["ocel:eid"].nunique(),
                             ocel.relations["ocel:activity"].nunique(),ocel.relations["ocel:type"].nunique(),
-                            dis_property,new_value,performance_measure,ot,spec,"Traditional")
+                            new_value,dis_property,performance_measure,ot,spec,"Traditional")
                     result.to_csv(result_dir+"/experiment2.csv")
 
 
                 for ot,spec in get_connected_case_notion(activity_type_relations,type_type_relation,object_types,activities):
                     new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)
                     result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
-                                        ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(),
-                            dis_property,new_value,performance_measure,ot, spec, "Connected")
+                            ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(),
+                            new_value,dis_property,performance_measure,ot, spec, "Connected")
                     result.to_csv(result_dir+"/experiment2.csv")
 
                 for ot,spec in get_advanced_case_notion(activity_type_relations,type_type_relation,object_types,activities,divergence):
                     new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)
                     result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
                                         ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(),
-                                        dis_property, new_value, performance_measure, ot, spec, "Advanced")
+                                        new_value, dis_property, performance_measure, ot, spec, "Advanced")
                     result.to_csv(result_dir+"/experiment2.csv")
 
 
 
 def run_case_study():
 
-    file = "data/08_ocel_legacy_recruiting.jsonocel"
+    file = "data/01_ocel_legacy_recruiting.jsonocel"
     try:
         ocel = pm4py.read_ocel(file)
     except:

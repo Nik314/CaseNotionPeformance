@@ -16,6 +16,15 @@ def get_resource_usage(log, case, additional):
 
 
 def get_total_costs(log, case, additional):
-    events = log.events[log.events["ocel:eid"].isin(case[0])]
-    objects = log.objects[log.events["ocel:oid"].isin(case[1])]
-    print("Todo: Total Cost Attribute Access")
+
+    try:
+        object_value = log.objects[log.objects["ocel:oid"].isin(case[1])][additional["ocel:attribute"]].sum().sum()
+    except:
+        object_value = 0.0
+
+    try:
+        event_values = log.events[log.events["ocel:eid"].isin(case[0])][additional["ocel:attribute"]].sum().sum()
+    except:
+        event_values = 0.0
+
+    return object_value+event_values
