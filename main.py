@@ -8,9 +8,9 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
-    runtime_experiment("data","results")
+    #runtime_experiment("data","results")
     property_experiment("data","results")
-    run_case_study()
+    #run_case_study()
 
     exit()
     frame = pandas.read_csv("results/experiment1.csv")

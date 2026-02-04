@@ -102,14 +102,14 @@ def property_experiment(log_dir,result_dir):
 
 
                 for ot,spec in get_connected_case_notion(activity_type_relations,type_type_relation,object_types,activities):
-                    new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)[1]
+                    new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)
                     result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
                                         ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(),
                             dis_property,new_value,performance_measure,ot, spec, "Connected")
                     result.to_csv(result_dir+"/experiment2.csv")
 
                 for ot,spec in get_advanced_case_notion(activity_type_relations,type_type_relation,object_types,activities,divergence):
-                    new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)[1]
+                    new_value = check_property(ocel,log_graph,ot,spec,performance_measure, additional,activities,object_types,dis_property)
                     result.loc[result.shape[0]] = (file, ocel.relations["ocel:oid"].nunique(), ocel.relations["ocel:eid"].nunique(),
                                         ocel.relations["ocel:activity"].nunique(), ocel.relations["ocel:type"].nunique(),
                                         dis_property, new_value, performance_measure, ot, spec, "Advanced")
