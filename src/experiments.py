@@ -49,7 +49,7 @@ def runtime_experiment(log_dir, result_dir):
 
     result = pandas.DataFrame(columns=["Log","Objects","Events","Activities","Types","Property Value","Property","Measure","Start","Relations","Runtime"])
 
-    for file in os.listdir(log_dir):
+    for file in reversed(os.listdir(log_dir)):
         file = log_dir + "/" + file
         for performance_measure in [get_total_costs,get_cycle_time,get_resource_usage]:
             for dis_property in [standard_deviation,skewness,kurtosis]:

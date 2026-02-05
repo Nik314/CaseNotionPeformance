@@ -1,28 +1,7 @@
 from src.auxillary_methods import get_log_properties
 from src.case_notion_specification import check_property, get_log_graph
 import copy
-
-import multiprocessing as mp
-import multiprocessing.pool
-
-class NoDaemonProcess(mp.Process):
-    @property
-    def daemon(self):
-        return False
-
-    @daemon.setter
-    def daemon(self, value):
-        pass
-
-
-class NoDaemonContext(type(mp.get_context())):
-    Process = NoDaemonProcess
-
-
-class NestedPool(mp.pool.Pool):
-    def __init__(self, *args, **kwargs):
-        kwargs["context"] = NoDaemonContext()
-        super().__init__(*args, **kwargs)
+from multiprocessing import Pool
 
 
 def check_node_concurrent(node,ocel,loggraph,start,rel,performance_indicator,
@@ -46,11 +25,13 @@ def check_type(ot,log_graph,ocel,activity_type_relations,type_type_relation,perf
         inputs = [(node, ocel, log_graph, local_start, local_relations |
             {rel for rel in activity_type_relations | type_type_relation if rel[0] == node}, performance_indicator,
             additional, activities, object_types,dis_property) for node in available_nodes]
-        if inputs:
-            with NestedPool(len(inputs)) as pool:
-                investigation = pool.starmap(check_node_concurrent,inputs)
-        else:
-            investigation = []
+
+        investigation = [check_node_concurrent(*stuff) for stuff in inputs]
+        #if inputs:
+        #    with Pool(len(inputs)) as pool:
+        #        investigation = pool.starmap(check_node_concurrent,inputs)
+        #else:
+        #    investigation = []
         investigation = [(entry[0],entry[1] -local_result) for entry in investigation]
         if not investigation or max([entry[1] for entry in investigation]) < 0:
             break
@@ -76,9 +57,8 @@ def get_optimized_case_notion_from_framework(ocel, dis_property, performance_ind
     inputs = [(ot,copy.deepcopy(log_graph),copy.deepcopy(ocel),activity_type_relations,type_type_relation,
                performance_indicator,dis_property,additional,activities,object_types) for ot in object_types]
 
-    with NestedPool(4) as pool:
+    with Pool(len(object_types)) as pool:
         results = pool.starmap(check_type,inputs)
-
     #results = [check_type(*stuff) for stuff in inputs]
 
     for local_start,local_relations,local_result in results:
