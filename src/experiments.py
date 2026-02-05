@@ -23,8 +23,8 @@ lookup_additional = {
     ("08",get_cycle_time):{},
     ("09",get_cycle_time):{},
     ("10",get_cycle_time):{},
-    ("01",get_resource_usage):{"ocel:type":["managers","recruiters"]},
-    ("02",get_resource_usage):{"ocel:type":["material"]},
+    ("01",get_resource_usage):{"ocel:type":["material"]},
+    ("02",get_resource_usage):{"ocel:type":["managers","recruiters"]},
     ("03",get_resource_usage):{"ocel:type":["Product"]},
     ("04",get_resource_usage):{"ocel:type":["Supplier"]},
     ("05",get_resource_usage):{"ocel:type":["HiringManager","Interviewer"]},
@@ -33,8 +33,8 @@ lookup_additional = {
     ("08",get_resource_usage):{"ocel:type":["Truck","Vehicle"]},
     ("09",get_resource_usage):{"ocel:type":["Machine"]},
     ("10",get_resource_usage):{"ocel:type":["MATNR"]},
-    #("01",get_total_costs):{"ocel:attribute":[""]}, (no cost attribute available)
-    ("02",get_total_costs):{"ocel:attribute":["Credit Amount (BSEG-WRBTR)"]},
+    ("01",get_total_costs):{"ocel:attribute":["Credit Amount (BSEG-WRBTR)"]},
+    #("02",get_total_costs):{"ocel:attribute":[""]}, (no cost attribute available)
     ("03",get_total_costs):{"ocel:attribute":["price"]},
     ("04",get_total_costs):{"ocel:attribute":["amount"]},
     #("05",get_total_costs):{"ocel:attribute":[""]},(no cost attribute available)
@@ -127,7 +127,7 @@ def property_experiment(log_dir,result_dir):
 
 def run_case_study():
 
-    file = "data/01_ocel_legacy_recruiting.jsonocel"
+    file = "data/02_ocel_legacy_recruiting.jsonocel"
     try:
         ocel = pm4py.read_ocel(file)
     except:

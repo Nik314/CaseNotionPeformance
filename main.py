@@ -8,12 +8,12 @@ plt.rcParams.update({'font.size': 18})
 if __name__ == "__main__":
     pass
 
-    #runtime_experiment("data","results")
-    property_experiment("data","results")
+    runtime_experiment("data","results")
+    #property_experiment("data","results")
     #run_case_study()
     exit()
 
-    frame = pandas.read_csv("results/experiment1.csv")
+    frame = pandas.read_csv("results/slow_experiment1.csv")
     frame["Notion"] = ["Automated"]*frame.shape[0]
     newframe = pandas.read_csv("results/experiment2.csv")
 
